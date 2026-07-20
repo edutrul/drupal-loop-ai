@@ -1,0 +1,21 @@
+uuid: f06c3ff8-4f68-47a9-8ad4-632c4a9d6ac2
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_bar_number
+field_name: field_bar_number
+entity_type: node
+type: string
+settings:
+  max_length: 30
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
