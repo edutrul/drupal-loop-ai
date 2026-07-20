@@ -56,6 +56,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      # `actions/checkout` with no `ref` lands on the default branch. That is
+      # right for a labeled issue (the agent cuts a fresh branch), but wrong
+      # for every PR-flavoured trigger: an `@claude` comment on a PR, a review,
+      # or an inline review comment all need the PR's own branch. Without this,
+      # the agent reads `main`, "fixes" code that isn't the code under review,
+      # and then tries to push a follow-up commit to a branch it was never on.
+      #
+      # `gh pr checkout` also sets up the upstream tracking ref, so the agent's
+      # later `git push` goes to the contributor's branch rather than failing.
+      - name: Check out the PR branch when the trigger came from a PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || (github.event.issue.pull_request && github.event.issue.number) || '' }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Trigger is attached to PR #$PR_NUMBER — checking out its branch."
+            gh pr checkout "$PR_NUMBER"
+            git --no-pager log --oneline -1
+          else
+            echo "No PR in context; staying on the default branch."
+          fi
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
