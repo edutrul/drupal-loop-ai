@@ -1,0 +1,23 @@
+uuid: be3398b1-bf97-4552-a612-fcf8317d270e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_duration_hours
+    - node.type.course
+id: node.course.field_duration_hours
+field_name: field_duration_hours
+entity_type: node
+bundle: course
+label: 'Duration (hours)'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: 1
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer
