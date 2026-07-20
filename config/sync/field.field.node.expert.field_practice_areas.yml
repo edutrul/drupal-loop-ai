@@ -1,0 +1,21 @@
+uuid: 96f3ebeb-5e5f-4fae-8189-906ba0377b7f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_practice_areas
+    - node.type.expert
+  module:
+    - options
+id: node.expert.field_practice_areas
+field_name: field_practice_areas
+entity_type: node
+bundle: expert
+label: 'Practice areas'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

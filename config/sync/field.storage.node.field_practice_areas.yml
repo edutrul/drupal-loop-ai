@@ -1,0 +1,36 @@
+uuid: b2db1bc7-560a-493b-9217-60a8eafdb64d
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_practice_areas
+field_name: field_practice_areas
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: constitutional
+      label: 'Constitutional law'
+    -
+      value: labor
+      label: 'Labor law'
+    -
+      value: civil
+      label: 'Civil law'
+    -
+      value: criminal
+      label: 'Criminal law'
+    -
+      value: administrative
+      label: 'Administrative law'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

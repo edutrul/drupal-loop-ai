@@ -1,0 +1,19 @@
+uuid: 97b28e27-f80d-44e3-924e-6d8c494b5e24
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_bar_number
+    - node.type.expert
+id: node.expert.field_bar_number
+field_name: field_bar_number
+entity_type: node
+bundle: expert
+label: 'Bar registration number'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,19 @@
+uuid: 94f05d53-3ffe-438d-95d0-9152d7c29923
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_job_title
+    - node.type.expert
+id: node.expert.field_job_title
+field_name: field_job_title
+entity_type: node
+bundle: expert
+label: 'Job title'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

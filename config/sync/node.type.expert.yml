@@ -1,0 +1,11 @@
+uuid: e8032d56-5ee6-438c-9e3b-0f021cde4efd
+langcode: en
+status: true
+dependencies: {  }
+name: Expert
+type: expert
+description: 'Professional profile for a lawyer or specialist at the practice.'
+help: null
+new_revision: true
+preview_mode: 0
+display_submitted: true
