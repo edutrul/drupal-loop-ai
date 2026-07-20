@@ -62,15 +62,17 @@ Do not weaken, skip, or edit the CI check to make it pass. If you cannot get
 ## Conventions
 
 **Language.** All user-facing labels, descriptions, and help text are in
-**Spanish** (the client is a Peruvian law practice). Machine names are ASCII
-`snake_case` with no accents: label `Artículo académico` → machine name
-`articulo_academico`.
+**English**. Machine names are ASCII `snake_case`: label `Academic article` →
+machine name `academic_article`.
+
+(The Spanish client-facing architecture deck in `docs/` is deliberately left in
+Spanish — it is a presentation artifact, not site config. Do not translate it.)
 
 **Machine names.**
-- Content types: bare noun, singular — `curso`, `experto`.
+- Content types: bare noun, singular — `course`, `expert`.
 - Fields: always `field_` prefixed and scoped to their meaning —
-  `field_duracion_horas`, not `field_duracion`.
-- Views: `snake_case` matching intent — `listado_cursos`.
+  `field_duration_hours`, not `field_duration`.
+- Views: `snake_case` matching intent — `course_listing`.
 
 **Reuse fields across bundles.** A field is two config entities:
 `field.storage.node.field_x.yml` (one per site, defines the type) and
@@ -87,7 +89,7 @@ concept.
    the form display is invisible in the editing UI even though it exists.
 
 **Views.** New views go in `views.view.<name>.yml`. Give every view a real
-`label` and `description` in Spanish, a page display with a sane `path`, and a
+`label` and `description` in English, a page display with a sane `path`, and a
 `pager`. Prefer `type: full` pagers over unlimited for anything content-backed.
 
 **Follow existing files as templates.** Before writing a new content type, read

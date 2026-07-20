@@ -94,10 +94,9 @@ jobs:
                - **Scope**: `drush config:export` rewrites everything it
                  touches. Are there config files in the diff unrelated to this
                  issue? Flag them.
-               - **Conventions**: Spanish user-facing labels/descriptions,
-                 ASCII `snake_case` machine names with no accents, `field_`
-                 prefix on fields, no duplicate field storage for a concept
-                 that already has one.
+               - **Conventions**: English user-facing labels/descriptions,
+                 ASCII `snake_case` machine names, `field_` prefix on fields,
+                 no duplicate field storage for a concept that already has one.
                - **The build**: run the same gate CI runs and report the result
                  explicitly in your review:
                  `./vendor/bin/drush site:install --existing-config --db-url=sqlite://sites/default/files/.ht.sqlite --yes`

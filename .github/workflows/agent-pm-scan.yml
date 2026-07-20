@@ -86,8 +86,8 @@ jobs:
                  to browse them on the front end.
                - Views with an unlimited pager, a missing sort, or no
                  `description`.
-               - English labels or descriptions that should be Spanish, or
-                 machine names with accents/non-ASCII characters.
+               - Labels or descriptions that are not in English, or machine
+                 names with non-ASCII characters.
                - Inconsistency between two bundles that should mirror each
                  other.
 
