@@ -4,7 +4,7 @@ langcode: en
 uuid: 6fe002b7-18cc-4814-9001-62474d485dcc
 name: 'Drupal Loop AI — Demo'
 mail: admin@example.com
-slogan: ''
+slogan: 'Config-as-code Drupal, built and reviewed by agents'
 page:
   403: ''
   404: ''
