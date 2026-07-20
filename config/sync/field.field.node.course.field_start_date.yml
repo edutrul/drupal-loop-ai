@@ -1,0 +1,21 @@
+uuid: 113f4d71-a794-4105-95c8-47524f01f53b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_start_date
+    - node.type.course
+  module:
+    - datetime
+id: node.course.field_start_date
+field_name: field_start_date
+entity_type: node
+bundle: course
+label: 'Start date'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

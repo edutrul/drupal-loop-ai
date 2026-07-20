@@ -1,0 +1,11 @@
+uuid: b8edd383-7dce-4709-ba3c-5085b8c584e2
+langcode: en
+status: true
+dependencies: {  }
+name: Course
+type: course
+description: 'Training courses and educational programs run by the practice.'
+help: null
+new_revision: true
+preview_mode: 0
+display_submitted: true
