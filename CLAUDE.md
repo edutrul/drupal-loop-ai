@@ -74,6 +74,18 @@ Spanish — it is a presentation artifact, not site config. Do not translate it.
   `field_duration_hours`, not `field_duration`.
 - Views: `snake_case` matching intent — `course_listing`.
 
+**Project shorthand: `DRU`** (short for Drupal). It is the ticket prefix for
+this project and appears in three places, always as `DRU-<issue number>`:
+issue titles, commit titles, and PR titles. See "Commits and pull requests".
+
+**Custom modules** live in `web/modules/custom/` and are prefixed `dru_` —
+`dru_course_import`, not `course_import`. The prefix keeps custom code
+unambiguously distinct from contrib in module lists, hook names, and service
+IDs. Since a module's machine name determines its hook prefix, the module
+`dru_course_import` implements `dru_course_import_form_alter()`; renaming a
+module later means renaming every hook, so get the prefix right when the module
+is created.
+
 **Reuse fields across bundles.** A field is two config entities:
 `field.storage.node.field_x.yml` (one per site, defines the type) and
 `field.field.node.<bundle>.field_x.yml` (one per bundle, defines the label and
@@ -101,8 +113,11 @@ than inventing a structure.
 
 ## Commits and pull requests
 
-- Prefix every commit title with `DLA-<issue number>: `, e.g.
-  `DLA-3: Add Curso content type with duration and level fields`.
+- Prefix every commit title with `DRU-<issue number>: `, e.g.
+  `DRU-3: Add Course content type with duration and delivery mode fields`.
+- Prefix PR titles the same way. When you open an issue yourself (the PM scan
+  agent does), prefix its title `DRU-<issue number>: ` too — edit the title
+  immediately after creation, since GitHub only assigns the number on create.
 - Imperative mood ("Add", not "Added"). No `feat:`/`fix:` prefixes. No trailing
   punctuation. Single line.
 - Do **not** add `Co-authored-by` or `Generated with Claude Code` lines.

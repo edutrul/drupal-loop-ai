@@ -106,6 +106,12 @@ jobs:
               make that call.
             - `gh issue create --title "..." --body "..." --label
               "agent-authored,pm-proposed"`.
+            - Then prefix the title with the project shorthand. GitHub only
+              assigns the issue number on creation, so capture the number from
+              the URL `gh issue create` prints and immediately run
+              `gh issue edit <n> --title "DRU-<n>: <original title>"`. Every
+              issue, commit and PR in this project carries the `DRU-` prefix
+              (DRU = Drupal) — see CLAUDE.md.
 
             Do NOT add `easy-fix` or `dev-heavy` yourself — that's
             agent-pm-triage.yml's job once the issue exists, and it will run

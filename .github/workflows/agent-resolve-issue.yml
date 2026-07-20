@@ -173,7 +173,7 @@ jobs:
             3. Run the validation loop above until `config:status` is clean.
             4. Commit, push the branch, and run `gh pr create` yourself
                targeting `main` (do NOT just post a link for a human to click):
-               - Title prefixed with `DLA-<issue number>:` followed by a short
+               - Title prefixed with `DRU-<issue number>:` followed by a short
                  summary.
                - Body starts with `Fixes #<issue number>`, and includes a
                  "What I changed" section and a "Risks / unsure about" section.
@@ -200,8 +200,8 @@ jobs:
             - If it's just a question: answer in a comment, don't touch code.
 
             **COMMIT RULES:**
-            - Prefix every commit title with `DLA-<issue number>: `, e.g.
-              `DLA-3: Add Curso content type with duration and level fields`.
+            - Prefix every commit title with `DRU-<issue number>: `, e.g.
+              `DRU-3: Add Course content type with duration and delivery mode fields`.
               If there's no issue number in context (e.g. a follow-up commit on
               an existing PR branch), reuse the issue number that PR/branch was
               opened for.
