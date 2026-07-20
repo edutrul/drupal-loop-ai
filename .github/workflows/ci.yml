@@ -1,0 +1,81 @@
+name: CI
+
+# The objective gate. Rebuilds the entire Drupal site from `config/sync/` on a
+# throwaway SQLite database and fails if the committed config does not import
+# cleanly or does not round-trip.
+#
+# This is deliberately a real Drupal boot, not a YAML lint: a lint would pass
+# on config that references a missing field storage, violates a schema, or
+# forgets to register a field in its form display. `site:install
+# --existing-config` catches all three, and `config:status` catches config that
+# was hand-edited but never normalized by `config:export`.
+#
+# No secrets, no external services. A human or an agent reviewer can rely on
+# this check before merging.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  config-import:
+    name: Rebuild site from config/sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, pdo_sqlite, sqlite3, mbstring, xml, curl, dom, zip
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Write settings.php
+        run: |
+          cp web/sites/default/default.settings.php web/sites/default/settings.php
+          chmod u+w web/sites/default web/sites/default/settings.php
+          printf "\n\$settings['config_sync_directory'] = '../config/sync';\n" \
+            >> web/sites/default/settings.php
+
+      # The real gate. Non-zero exit on invalid YAML, a missing dependency, a
+      # schema violation, or a field instance whose storage does not exist.
+      - name: Install Drupal from committed config
+        run: |
+          ./vendor/bin/drush site:install --existing-config \
+            --db-url=sqlite://sites/default/files/.ht.sqlite \
+            --yes
+
+      # Catches config that was hand-edited but never run through
+      # `drush config:export` — the exported form is canonical, so any drift
+      # here means the committed YAML is not what Drupal actually produces.
+      - name: Assert config round-trips with no drift
+        run: |
+          set -o pipefail
+          output="$(./vendor/bin/drush config:status --format=string 2>&1)"
+          echo "$output"
+          if [ -n "$(./vendor/bin/drush config:status --format=list 2>/dev/null)" ]; then
+            echo "::error::config/sync does not match the imported site. Run 'drush config:export' and commit the result."
+            exit 1
+          fi
+
+      - name: Report site status
+        run: ./vendor/bin/drush status

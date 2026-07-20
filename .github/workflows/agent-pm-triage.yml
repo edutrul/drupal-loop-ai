@@ -1,0 +1,112 @@
+name: Agent — PM triage on issues
+
+# PM GATEKEEPER (event-driven). Runs whenever an issue is opened or edited.
+# Job: decide whether the issue is well-specified enough to hand to the
+# executor (agent-resolve-issue.yml). If yes, label it `easy-fix` or
+# `dev-heavy` itself, which is exactly what triggers that workflow. If the
+# issue is vague, missing acceptance criteria, or otherwise not actionable, it
+# does NOT apply an execution label — instead it posts a comment asking the
+# author to fill the gaps, and labels `needs-clarification`.
+#
+# Skips issues that already carry an execution label (`easy-fix`/`dev-heavy`)
+# — those have already passed triage and are mid-flight or done; further
+# edits on them are between the human and the resolver, not this gate.
+#
+# Auth uses CLAUDE_CODE_OAUTH_TOKEN (subscription), not API credits.
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+concurrency:
+  group: agent-pm-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    if: >-
+      !contains(github.event.issue.labels.*.name, 'easy-fix') &&
+      !contains(github.event.issue.labels.*.name, 'dev-heavy')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "needs-clarification" --color "D93F0B" --description "PM agent: issue needs more detail before it can be worked" --force
+          gh label create "needs-human-review" --color "E99695" --description "Executor agent got blocked and needs a human decision" --force
+          gh label create "easy-fix" --color "0E8A16" --description "Small, mechanical, low-risk change" --force
+          gh label create "dev-heavy" --color "5319E7" --description "Multi-file or design-bearing change" --force
+          gh label create "agent-authored" --color "BFD4F2" --description "Opened by an agent, not a human" --force
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          allowed_bots: "claude"
+          claude_args: |
+            --model claude-opus-4-8
+            --max-turns 15
+            --allowedTools "Bash(gh issue:*),Read,Glob,Grep,LS"
+          prompt: |
+            You are acting as the product manager gatekeeper for this repo.
+            Read CLAUDE.md first. An issue was just opened or edited:
+
+            Issue #${{ github.event.issue.number }}: "${{ github.event.issue.title }}"
+
+            Use `gh issue view ${{ github.event.issue.number }}` to read its
+            full current body and existing comments before deciding anything.
+
+            This is a Drupal 11 config-as-code project. Decide whether this
+            issue is specific enough to hand to an implementation agent with no
+            further back-and-forth. A well-specified issue here has: a clear
+            desired change, enough detail to know which config entities it
+            touches, and a way to tell when it's done.
+
+            Be concrete about what "specific enough" means for Drupal config:
+            - A new content type needs its label AND intended machine name.
+            - A new field needs its label, machine name, field TYPE (string,
+              list_string, integer, entity_reference, datetime...), cardinality,
+              whether it's required, and — for list fields — the allowed values.
+              A field request with no type is NOT actionable.
+            - A new view needs what it lists, the page path, sort order, and
+              which fields/columns it shows.
+            Bug reports need observed vs expected behavior.
+
+            **IF IT'S READY:**
+            Run `gh issue edit ${{ github.event.issue.number }} --add-label
+            <label>` where `<label>` is `easy-fix` for a small, mechanical,
+            low-risk change (a single field, a label/description fix, a pager
+            tweak) or `dev-heavy` for anything spanning multiple config
+            entities, a whole content type, a new view, or anything with real
+            design decisions. Pick exactly one. If the issue already has a
+            `needs-clarification` label from a previous round, remove it
+            (`gh issue edit ${{ github.event.issue.number }} --remove-label
+            needs-clarification`). Do not post a comment in this case — the
+            label change is the signal, and the executor will pick it up.
+
+            **IF IT'S NOT READY:**
+            Do NOT add `easy-fix` or `dev-heavy`. Instead:
+            1. Run `gh issue edit ${{ github.event.issue.number }} --add-label
+               needs-clarification`.
+            2. Post one comment (`gh issue comment ${{ github.event.issue.number }}
+               --body "..."`) written like a PM pushing back on a vague ticket:
+               specific, pointed questions about exactly what's missing (not a
+               generic "please add more detail"). Reference the actual title/
+               content of the issue. Keep it to 2-5 short bullet points max.
+               Be direct but collegial — this is a solo author's own repo, not
+               a stranger's PR.
+            3. Stop. Do not write or change any code. Do not open a PR.
+
+            Never apply both an execution label and `needs-clarification` at
+            the same time. Never relabel an issue that already has `easy-fix`
+            or `dev-heavy` from a prior run unless its content materially
+            changed in a way that changes the right label.

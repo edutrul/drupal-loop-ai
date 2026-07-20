@@ -1,0 +1,42 @@
+# Composer-managed — rebuilt by `composer install` in CI.
+/vendor/
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/web/libraries/
+
+# Drupal scaffold files (owned by drupal/core-composer-scaffold).
+/web/.csslintrc
+/web/.eslintignore
+/web/.eslintrc.json
+/web/.ht.router.php
+/web/.htaccess
+/web/INSTALL.txt
+/web/README.md
+/web/autoload.php
+/web/example.gitignore
+/web/index.php
+/web/robots.txt
+/web/update.php
+/web/web.config
+/web/sites/example.settings.local.php
+/web/sites/example.sites.php
+/web/sites/development.services.yml
+
+# Environment-specific. Never commit — CI writes its own.
+/web/sites/*/settings.php
+/web/sites/*/settings.local.php
+/web/sites/*/services.yml
+/web/sites/*/files/
+
+# Databases. Drush resolves a relative --db-url against the docroot, so a
+# local install can land a .ht.sqlite outside sites/default/files.
+*.sqlite
+*.sqlite3
+/web/default/
+
+# Local tooling noise.
+.DS_Store
+/.idea/
+/.vscode/

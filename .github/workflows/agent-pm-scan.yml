@@ -1,0 +1,114 @@
+name: Agent — PM proactive scan
+
+# PM SCOUT (scheduled, plus manual trigger). Periodically reads the repo like
+# a product manager doing a review pass and opens new issues for gaps it finds
+# — it never edits config or opens PRs itself. Issues it opens are already
+# well-specified (so agent-pm-triage.yml can label them `easy-fix`/`dev-heavy`
+# straight away if they meet the bar), but they still get `pm-proposed` so a
+# human can see at a glance which backlog items were self-generated and
+# veto/edit them before work starts.
+#
+# This closes the loop: scout -> triage -> execute -> review, with the human
+# holding only the merge button.
+#
+# Capped per run to keep this from flooding the backlog. Auth uses
+# CLAUDE_CODE_OAUTH_TOKEN (subscription), not API credits.
+#
+# No `track_progress` here (unlike the other workflows) — the action rejects it
+# outside issue/PR/comment events, and schedule/workflow_dispatch is neither.
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # nightly, ~22:00 Lima
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+concurrency:
+  group: agent-pm-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, pdo_sqlite, sqlite3, mbstring, xml, curl, dom, zip
+          coverage: none
+
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "pm-proposed" --color "1D76DB" --description "Issue opened by the PM scan agent, not a human" --force
+          gh label create "agent-authored" --color "BFD4F2" --description "Opened by an agent, not a human" --force
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --model claude-opus-4-8
+            --max-turns 40
+            --allowedTools "Bash(gh issue:*),Read,Glob,Grep,LS"
+          prompt: |
+            You are acting as the product manager for this repo, doing a
+            periodic review pass. Read CLAUDE.md first.
+
+            This is a Drupal 11 config-as-code demo site for a Peruvian law
+            practice. The site's entire structure is YAML under `config/sync/`.
+
+            Goal: find concrete, valuable improvements to the site's content
+            model and open well-specified GitHub issues for the best ones.
+
+            Before proposing anything:
+            1. Run `gh issue list --state open --limit 200` to see what's
+               already tracked. Do not propose a duplicate of an existing open
+               issue (read titles/bodies closely, not just keywords).
+            2. Actually look at the config (`Read`/`Grep`/`Glob` across
+               `config/sync/`) rather than guessing. Useful things to look for:
+               - A content type whose fields are missing something an editor
+                 obviously needs (no summary, no image, no publication date).
+               - A field that exists in storage and in a bundle but is missing
+                 from `core.entity_form_display.node.<bundle>.default.yml` —
+                 meaning editors cannot actually fill it in.
+               - Content types with no corresponding view, so there is no way
+                 to browse them on the front end.
+               - Views with an unlimited pager, a missing sort, or no
+                 `description`.
+               - English labels or descriptions that should be Spanish, or
+                 machine names with accents/non-ASCII characters.
+               - Inconsistency between two bundles that should mirror each
+                 other.
+
+            For each issue worth raising (cap at 3 per run — quality over
+            volume; if you find nothing genuinely worth a human's time, open
+            zero and say so in your final summary):
+            - Write a title that states the concrete change, not a vague theme.
+            - Body must include: what you observed (with the config file
+              path(s)), why it matters for an editor or a visitor, and a
+              concrete spec precise enough that another agent could implement
+              it without asking you anything. For Drupal that means: exact
+              machine names, exact field types, cardinality, required or not,
+              and allowed values for any list field. An issue that says "add a
+              category field" without saying `list_string` vs
+              `entity_reference` is not good enough — you are the one who must
+              make that call.
+            - `gh issue create --title "..." --body "..." --label
+              "agent-authored,pm-proposed"`.
+
+            Do NOT add `easy-fix` or `dev-heavy` yourself — that's
+            agent-pm-triage.yml's job once the issue exists, and it will run
+            automatically on `issues: opened`. Do NOT write or change any
+            config, and do NOT open a pull request. Your only output should be
+            the issues you create (or none, if nothing qualified).

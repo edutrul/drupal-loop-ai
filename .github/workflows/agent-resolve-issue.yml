@@ -1,0 +1,188 @@
+name: Agent — resolve labeled issue / respond to @claude
+
+# EXECUTOR (event-driven, no cron). Two ways to invoke:
+#   1. Label an issue `easy-fix` or `dev-heavy` -> agent implements it on a
+#      branch and opens a PR for you to review. Model picked by label.
+#   2. Mention `@claude` in an issue comment, PR review, or inline PR review
+#      comment -> agent reads that thread/diff context and either pushes a
+#      follow-up commit to the existing PR branch, fixes a failing check, or
+#      just answers. Always opus, since these are interactive follow-ups.
+#
+# It never merges its own PR.
+#
+# Auth uses your subscription via CLAUDE_CODE_OAUTH_TOKEN (a repo secret), not
+# API credits.
+#
+# --allowedTools (not --permission-mode bypassPermissions) is the permission
+# model: without an explicit allowlist every Bash/Edit/Write call is denied by
+# default in CI (no human there to approve them), so the agent silently does
+# nothing while the SDK still reports "success". bypassPermissions "fixes"
+# that but grants the agent any shell command, not just git/composer/drush/gh
+# — the allowlist below is the scoped equivalent.
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+  pull_request_review:
+    types: [submitted]
+
+# Least privilege: enough to push a branch, open a PR, relabel the issue, and
+# read CI results on a PR. No admin, can't merge, can't touch other repos.
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: agent-issue-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    if: >-
+      (github.event_name == 'issues' && (github.event.label.name == 'easy-fix' || github.event.label.name == 'dev-heavy')) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && contains(fromJson('["OWNER", "MEMBER"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && contains(fromJson('["OWNER", "MEMBER"]'), github.event.review.author_association)) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && contains(fromJson('["OWNER", "MEMBER"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, pdo_sqlite, sqlite3, mbstring, xml, curl, dom, zip
+          coverage: none
+
+      # Pre-warm the toolchain so the agent's turn budget goes to the actual
+      # task, not to waiting on `composer install`.
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Write settings.php
+        run: |
+          cp web/sites/default/default.settings.php web/sites/default/settings.php
+          chmod u+w web/sites/default web/sites/default/settings.php
+          printf "\n\$settings['config_sync_directory'] = '../config/sync';\n" \
+            >> web/sites/default/settings.php
+
+      # Cheap model only for a fresh easy-fix label; everything else (dev-heavy,
+      # and any @claude follow-up) gets the stronger model.
+      - name: Select model and turn budget
+        id: cfg
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ] && [ "${{ github.event.label.name }}" = "easy-fix" ]; then
+            echo "model=claude-haiku-4-5-20251001" >> "$GITHUB_OUTPUT"
+            echo "max_turns=30" >> "$GITHUB_OUTPUT"
+          else
+            echo "model=claude-opus-4-8" >> "$GITHUB_OUTPUT"
+            echo "max_turns=60" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          # The triage agent applies `easy-fix`/`dev-heavy` as `claude[bot]`,
+          # so the resulting issues.labeled event is bot-initiated. Without
+          # this, claude-code-action's anti-loop guard hard-fails the run
+          # ("Workflow initiated by non-human actor"), so the label never
+          # produces a PR. Scope it to `claude` only (not `*`) — the `if`
+          # above still gates @claude comments to OWNER/MEMBER humans.
+          allowed_bots: "claude"
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --model ${{ steps.cfg.outputs.model }}
+            --max-turns ${{ steps.cfg.outputs.max_turns }}
+            --allowedTools "Bash(git:*),Bash(gh issue:*),Bash(gh pr:*),Bash(composer:*),Bash(php:*),Bash(./vendor/bin/drush:*),Bash(cp:*),Bash(chmod:*),Bash(printf:*),Bash(ls:*),Bash(cat:*),Edit,Write,Read,Glob,Grep,LS,WebSearch,WebFetch"
+          prompt: |
+            OVERRIDE: ignore any default instruction telling you to just post a
+            "Create a PR" link for the human to click. You have `gh` in your
+            allowedTools — when these instructions say "open a pull request",
+            that means run `gh pr create` yourself, right now, in this run. A
+            link is not an open PR. Never finish a labeled-issue run by only
+            posting a compare/quick_pull link instead of actually creating the PR.
+
+            This is a Drupal 11 config-as-code project — read CLAUDE.md first
+            and follow it exactly. `composer install` has already run and
+            `web/sites/default/settings.php` is already written for you, so
+            you can go straight to `./vendor/bin/drush`.
+
+            The site has no shared database. Structural changes are YAML files
+            in `config/sync/`. Before writing new config, READ the existing
+            equivalents as templates — `config/sync/node.type.article.yml`,
+            `config/sync/field.field.node.article.*.yml`,
+            `config/sync/core.entity_form_display.node.article.default.yml`,
+            `config/sync/views.view.content.yml` — and match their shape.
+
+            **THE VALIDATION LOOP (do this, do not skip it):**
+            1. Hand-write the YAML into `config/sync/`.
+            2. Rebuild the site from your config — this is what CI runs and it
+               fails loudly on bad YAML, a missing field storage, or a schema
+               violation:
+               `./vendor/bin/drush site:install --existing-config --db-url=sqlite://sites/default/files/.ht.sqlite --yes`
+            3. Normalize it — this fills in `uuid`, `_core`, and the correct
+               `dependencies` blocks so you never have to guess them:
+               `./vendor/bin/drush config:export --yes`
+            4. Confirm clean: `./vendor/bin/drush config:status` must print
+               "No differences between DB and sync directory."
+            5. `git diff` and review what step 3 rewrote. If `config:export`
+               touched files unrelated to your issue, revert those hunks — see
+               the "Scope discipline" section of CLAUDE.md.
+
+            Do NOT weaken, delete, or edit `.github/workflows/ci.yml` to make
+            the build pass.
+
+            **WHEN WORKING ON A NEWLY LABELED ISSUE (`easy-fix` / `dev-heavy`):**
+            1. Create a new branch named `agent/issue-<issue number>`.
+            2. Implement ONLY what the issue asks. No unrelated refactors, no
+               dependency bumps, no reformatting untouched config.
+            3. Run the validation loop above until `config:status` is clean.
+            4. Commit, push the branch, and run `gh pr create` yourself
+               targeting `main` (do NOT just post a link for a human to click):
+               - Title prefixed with `DLA-<issue number>:` followed by a short
+                 summary.
+               - Body starts with `Fixes #<issue number>`, and includes a
+                 "What I changed" section and a "Risks / unsure about" section.
+               - In "What I changed", list every config entity you added or
+                 modified by its machine name, so a reviewer can check the set
+                 is complete (a field needs its storage, its bundle instance,
+                 AND its form/view display entries — see CLAUDE.md).
+               - Add the label `agent-authored` to the PR.
+            5. Do NOT merge the PR. Leave it for human review.
+
+            STOP CONDITION — if the issue is ambiguous, requires a product
+            decision you cannot make safely, needs a large refactor, or you
+            cannot get `drush config:status` clean: do NOT open a PR. Instead
+            add the label `needs-human-review` to the issue, post a brief
+            comment explaining exactly what blocked you (paste the actual drush
+            error), and stop.
+
+            **WHEN RESPONDING TO `@claude` ON AN EXISTING ISSUE OR PR THREAD:**
+            - If it's review feedback on your own open PR: make the requested
+              change and push a new commit to the SAME branch. Do NOT open a new
+              PR. Re-run the validation loop before pushing.
+            - If it's a CI failure on your PR: fix it, commit, push — CI re-runs
+              automatically.
+            - If it's just a question: answer in a comment, don't touch code.
+
+            **COMMIT RULES:**
+            - Prefix every commit title with `DLA-<issue number>: `, e.g.
+              `DLA-3: Add Curso content type with duration and level fields`.
+              If there's no issue number in context (e.g. a follow-up commit on
+              an existing PR branch), reuse the issue number that PR/branch was
+              opened for.
+            - After the prefix: imperative mood ("Add", not "Added"); no
+              "feat:"/"fix:" prefixes; no trailing punctuation; single line.
+            - Do NOT add "Co-authored-by" or "Generated with Claude Code" lines.
