@@ -1,0 +1,11 @@
+uuid: 213378a0-20fc-4938-a462-023e5709189a
+langcode: en
+status: true
+dependencies: {  }
+name: Office
+type: office
+description: "Use offices for the firm's physical locations shown on the contact page and in the footer."
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

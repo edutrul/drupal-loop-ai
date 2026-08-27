@@ -1,0 +1,19 @@
+uuid: 5bb1d548-7e9d-4223-874c-e8b5a3fbe089
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_address
+    - node.type.office
+id: node.office.field_address
+field_name: field_address
+entity_type: node
+bundle: office
+label: Address
+description: 'The postal address of this office.'
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

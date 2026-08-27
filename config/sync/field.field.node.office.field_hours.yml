@@ -1,0 +1,19 @@
+uuid: 7cc1ce64-d1f6-4307-b3be-d7a9d44ad042
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_hours
+    - node.type.office
+id: node.office.field_hours
+field_name: field_hours
+entity_type: node
+bundle: office
+label: 'Opening hours'
+description: 'The opening hours for this office, e.g. "Mon-Fri 9:00-18:00".'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

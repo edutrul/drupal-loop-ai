@@ -1,0 +1,57 @@
+uuid: c1145b9f-25bb-447a-beec-63248bd32639
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.office.field_address
+    - field.field.node.office.field_email
+    - field.field.node.office.field_hours
+    - field.field.node.office.field_image
+    - field.field.node.office.field_map_url
+    - field.field.node.office.field_phone
+    - image.style.medium
+    - node.type.office
+  module:
+    - image
+    - user
+id: node.office.teaser
+targetEntityType: node
+bundle: office
+mode: teaser
+content:
+  field_address:
+    type: basic_string
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_image:
+    type: image
+    label: hidden
+    settings:
+      image_link: content
+      image_style: medium
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: -1
+    region: content
+  field_phone:
+    type: string
+    label: inline
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_email: true
+  field_hours: true
+  field_map_url: true
