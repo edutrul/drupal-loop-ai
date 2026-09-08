@@ -1,0 +1,103 @@
+uuid: f0d4676c-a01f-41ac-8fe6-83c1ac62ae9f
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.large
+    - image.style.medium
+    - image.style.wide
+  module:
+    - responsive_image
+id: article_full
+label: 'Article full image'
+image_style_mappings:
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.sm
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.md
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.lg
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.xl
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.nav-md
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.nav
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.grid-md
+    multiplier: 1x
+  -
+    image_mapping_type: sizes
+    image_mapping:
+      sizes: '(min-width: 60rem) 960px, 100vw'
+      sizes_image_styles:
+        - medium
+        - large
+        - wide
+      image_style: ''
+    breakpoint_id: olivero.grid-max
+    multiplier: 1x
+breakpoint_group: olivero
+fallback_image_style: large
