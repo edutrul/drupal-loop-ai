@@ -1,0 +1,29 @@
+uuid: 19dd3f2f-d734-470c-930f-962f017c4061
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_related_articles
+    - node.type.article
+  module:
+    - node
+id: node.article.field_related_articles
+field_name: field_related_articles
+entity_type: node
+bundle: article
+label: 'Related articles'
+description: 'Up to three other articles to surface as further reading at the end of this one.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      article: article
+    sort:
+      field: created
+      direction: DESC
+    auto_create: false
+field_type: entity_reference

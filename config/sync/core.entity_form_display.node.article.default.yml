@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.article.body
     - field.field.node.article.field_image
+    - field.field.node.article.field_related_articles
     - image.style.thumbnail
     - node.type.article
   module:
@@ -39,6 +40,16 @@ content:
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_related_articles:
+    type: entity_reference_autocomplete
+    weight: 20
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
   path:
     type: path

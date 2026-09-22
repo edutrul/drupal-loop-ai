@@ -5,6 +5,7 @@ dependencies:
   config:
     - field.field.node.article.body
     - field.field.node.article.field_image
+    - field.field.node.article.field_related_articles
     - image.style.wide
     - node.type.article
   module:
@@ -33,6 +34,14 @@ content:
         attribute: eager
     third_party_settings: {  }
     weight: -1
+    region: content
+  field_related_articles:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 10
     region: content
   links:
     settings: {  }
