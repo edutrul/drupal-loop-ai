@@ -1,0 +1,23 @@
+uuid: 937b7e5f-cedc-4a01-819c-254bfd3a994a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_legal_source
+    - node.type.article
+  module:
+    - link
+id: node.article.field_legal_source
+field_name: field_legal_source
+entity_type: node
+bundle: article
+label: 'Official source'
+description: 'Link each norm, ruling, or gazette entry this content refers to (e.g. a Diario Oficial El Peruano publication or a court resolution). Put the citation in the link text, for example "Decreto Supremo N.º 009-2024-TR".'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  title: 2
+  link_type: 16
+field_type: link

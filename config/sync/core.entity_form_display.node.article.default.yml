@@ -5,10 +5,12 @@ dependencies:
   config:
     - field.field.node.article.body
     - field.field.node.article.field_image
+    - field.field.node.article.field_legal_source
     - image.style.thumbnail
     - node.type.article
   module:
     - image
+    - link
     - path
     - text
 id: node.article.default
@@ -39,6 +41,12 @@ content:
     settings:
       progress_indicator: throbber
       preview_image_style: thumbnail
+    third_party_settings: {  }
+  field_legal_source:
+    type: link_default
+    weight: 4
+    region: content
+    settings: {  }
     third_party_settings: {  }
   path:
     type: path
