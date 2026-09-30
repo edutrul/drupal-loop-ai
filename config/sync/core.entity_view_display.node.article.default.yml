@@ -5,10 +5,12 @@ dependencies:
   config:
     - field.field.node.article.body
     - field.field.node.article.field_image
+    - field.field.node.article.field_legal_source
     - image.style.wide
     - node.type.article
   module:
     - image
+    - link
     - text
     - user
 id: node.article.default
@@ -33,6 +35,13 @@ content:
         attribute: eager
     third_party_settings: {  }
     weight: -1
+    region: content
+  field_legal_source:
+    type: link
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
     region: content
   links:
     settings: {  }
